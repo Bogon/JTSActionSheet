@@ -10,7 +10,7 @@
 
 #import "JTSActionSheetTheme.h"
 
-CGFloat const JTSActionSheetItemViewCornerRadius = 4.0f;
+CGFloat const JTSActionSheetItemViewCornerRadius = 8.0f;
 CGFloat const JTSActionSheetItemDefaultHeight = 44.0;
 
 @interface JTSActionSheetItemView ()
