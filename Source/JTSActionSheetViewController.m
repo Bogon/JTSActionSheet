@@ -40,29 +40,53 @@
 }
 
 - (void)playPresentationAnimation:(BOOL)animated tintableUnderlyingView:(UIView *)view {
+
     if (self.sheetIsVisible == NO) {
+        
         self.sheetIsVisible = YES;
-        UIViewAnimationOptions options = UIViewAnimationOptionAllowUserInteraction | 7 << 16; // unpublished default curve
-        CGFloat duration = (animated) ? 0.3 : 0;
-        [UIView animateWithDuration:duration delay:0 options:options animations:^{
-            view.tintAdjustmentMode = UIViewTintAdjustmentModeDimmed;
-            self.sheet.transform = CGAffineTransformIdentity;
-            self.backdropShadowView.alpha = 1;
-            [self.sheet addMotionEffects];
-        } completion:nil];
+        
+        BOOL usePadLayout = self.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassRegular;
+        if (usePadLayout) {
+            self.sheet.alpha = 0;
+            self.sheet.transform = CGAffineTransformMakeScale(0.75, 0.75);
+            UIViewAnimationOptions options = UIViewAnimationOptionAllowUserInteraction | 7 << 16; // unpublished default curve
+            CGFloat duration = (animated) ? 0.4 : 0;
+            [UIView animateWithDuration:duration delay:0 usingSpringWithDamping:0.8 initialSpringVelocity:0 options:options animations:^{
+                view.tintAdjustmentMode = UIViewTintAdjustmentModeDimmed;
+                self.sheet.transform = CGAffineTransformIdentity;
+                self.backdropShadowView.alpha = 1;
+                [self.sheet addMotionEffects];
+                self.sheet.alpha = 1;
+            } completion:nil];
+        }
+        else {
+            UIViewAnimationOptions options = UIViewAnimationOptionAllowUserInteraction | 7 << 16; // unpublished default curve
+            CGFloat duration = (animated) ? 0.3 : 0;
+            [UIView animateWithDuration:duration delay:0 options:options animations:^{
+                view.tintAdjustmentMode = UIViewTintAdjustmentModeDimmed;
+                self.sheet.transform = CGAffineTransformIdentity;
+                self.backdropShadowView.alpha = 1;
+                [self.sheet addMotionEffects];
+            } completion:nil];
+        }
     }
 }
 
 - (void)playDismissalAnimation:(BOOL)animated tintableUnderlyingView:(UIView *)view completion:(void(^)(void))completion {
     if (self.sheetIsVisible == YES) {
         self.sheetIsVisible = NO;
+        BOOL usePadLayout = self.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassRegular;
         UIViewAnimationOptions options = 6 << 16; // unpublished default curve
         CGFloat duration = (animated) ? 0.25 : 0;
         [UIView animateWithDuration:duration delay:0 options:options animations:^{
             view.tintAdjustmentMode = UIViewTintAdjustmentModeAutomatic;
-            self.sheet.transform = CGAffineTransformMakeTranslation(0, self.sheet.bounds.size.height);
             self.backdropShadowView.alpha = 0;
             [self.sheet removeMotionEffects];
+            if (usePadLayout) {
+                self.sheet.alpha = 0;
+            } else {
+                self.sheet.transform = CGAffineTransformMakeTranslation(0, self.sheet.bounds.size.height);
+            }
         } completion:^(BOOL finished) {
             if (completion) {
                 completion();
@@ -106,14 +130,38 @@
 #pragma mark - Layout
 
 - (void)repositionSheet {
-    CGFloat actionSheetWidth = self.view.bounds.size.width;
+    
+    CGFloat totalAvailableWidth = self.view.bounds.size.width;
+    
+    BOOL usePadLayout = self.traitCollection.horizontalSizeClass == UIUserInterfaceSizeClassRegular;
+
+    CGFloat actionSheetWidth;
+    
+    if (usePadLayout) {
+        actionSheetWidth = MIN(totalAvailableWidth, 480.0f);
+    } else {
+        actionSheetWidth = totalAvailableWidth;
+    }
+    
     CGFloat actionSheetHeight = ceilf([self.sheet intrinsicHeightGivenAvailableWidth:actionSheetWidth]);
     self.sheet.bounds = CGRectMake(0, 0, actionSheetWidth, actionSheetHeight);
-    self.sheet.center = CGPointMake(roundf(actionSheetWidth / 2.0), roundf(self.view.bounds.size.height - actionSheetHeight / 2.0));
+    
+    if (usePadLayout) {
+        self.sheet.center = CGPointMake(roundf(totalAvailableWidth / 2.0),
+                                        roundf(self.view.bounds.size.height / 2.0));
+    } else {
+        self.sheet.center = CGPointMake(roundf(totalAvailableWidth / 2.0),
+                                        roundf(self.view.bounds.size.height - actionSheetHeight / 2.0));
+    }
+    
     if (self.sheetIsVisible) {
         self.sheet.transform = CGAffineTransformIdentity;
     } else {
-        self.sheet.transform = CGAffineTransformMakeTranslation(0, actionSheetHeight);
+        if (usePadLayout) {
+            self.sheet.transform = CGAffineTransformMakeScale(0.75, 0.75);
+        } else {
+            self.sheet.transform = CGAffineTransformMakeTranslation(0, actionSheetHeight);
+        }
     }
 }
 
