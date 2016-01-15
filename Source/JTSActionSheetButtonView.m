@@ -116,7 +116,7 @@
 
 - (CGFloat)intrinsicHeightGivenAvailableWidth:(CGFloat)availableWidth {
     CGFloat actualHeight = roundf(self.theme.normalButtonFont.capHeight + JTSActionSheetMargin * 4.0);
-    return MAX(actualHeight, 44.0);
+    return MAX(actualHeight, 56.0);
 }
 
 #pragma mark - Button Actions
